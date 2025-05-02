@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bar Chart with D3.js</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <style>
+        .bar:hover {
+            fill: orange;
+        }
+        .tooltip {
+            position: absolute;
+            background-color: #fff;
+            border: 1px solid #ccc;
+            padding: 5px;
+            pointer-events: none;
+            font-size: 12px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        // Sample data
+        const data = [
+            { manufacturer: "Toyota", sales: 120 },
+            { manufacturer: "Ford", sales: 95 },
+            { manufacturer: "Chevrolet", sales: 105 },
+            { manufacturer: "Honda", sales: 110 },
+            { manufacturer: "Nissan", sales: 90 }
+        ];
+
+        // Dimensions
+        const margin = { top: 20, right: 20, bottom: 50, left: 50 };
+        const width = 600 - margin.left - margin.right;
+        const height = 400 - margin.top - margin.bottom;
+
+        // Create SVG container
+        const svg = d3.select("body")
+            .append("svg")
+            .attr("width", width + margin.left + margin.right)
+            .attr("height", height + margin.top + margin.bottom)
+            .append("g")
+            .attr("transform", `translate(${margin.left},${margin.top})`);
+
+        // Scales
+        const x = d3.scaleBand()
+            .domain(data.map(d => d.manufacturer))
+            .range([0, width])
+            .padding(0.2);
+
+        const y = d3.scaleLinear()
+            .domain([0, d3.max(data, d => d.sales)])
+            .range([height, 0]);
+
+        // Axes
+        svg.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x))
+            .selectAll("text")
+            .attr("transform", "rotate(-45)")
+            .style("text-anchor", "end");
+
+        svg.append("g")
+            .call(d3.axisLeft(y));
+
+        // Axis labels
+        svg.append("text")
+            .attr("text-anchor", "middle")
+            .attr("x", width / 2)
+            .attr("y", height + margin.bottom - 10)
+            .text("Manufacturer");
+
+        svg.append("text")
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(-90)")
+            .attr("x", -height / 2)
+            .attr("y", -margin.left + 15)
+            .text("Sales (in thousands)");
+
+        // Tooltip
+        const tooltip = d3.select("body")
+            .append("div")
+            .attr("class", "tooltip")
+            .style("opacity", 0);
+
+        // Bars
+        svg.selectAll(".bar")
+            .data(data)
+            .enter()
+            .append("rect")
+            .attr("class", "bar")
+            .attr("x", d => x(d.manufacturer))
+            .attr("y", d => y(d.sales))
+            .attr("width", x.bandwidth())
+            .attr("height", d => height - y(d.sales))
+            .attr("fill", "steelblue")
+            .on("click", function (event, d) {
+                tooltip
+                    .style("opacity", 1)
+                    .style("left", `${event.pageX + 5}px`)
+                    .style("top", `${event.pageY - 28}px`)
+                    .html(`<strong>Manufacturer:</strong> ${d.manufacturer}<br><strong>Sales:</strong> ${d.sales}`);
+            });
+
+        // Hide tooltip on click anywhere else
+        d3.select("body").on("click", function (event) {
+            if (!event.target.classList.contains("bar")) {
+                tooltip.style("opacity", 0);
+            }
+        });
+    </script>
+</body>
+</html>
